@@ -1,14 +1,13 @@
 # -*- coding: UTF-8 -*-
-from socket import AF_INET, socket, SOCK_STREAM, error
+from socket import AF_INET, socket, SOCK_STREAM, error, gethostbyname, gethostname
 from threading import Thread
 import time
-
 
 def accept_incoming_connections():
     """Sets up handling for incoming clients."""
     while True:
         client, client_address = SERVER.accept()
-        print("> New connection: %s:%s" % client_address)
+        print("> New connection:" + str(client_address))
         client.send(bytes("Welcome! Now type your name and press enter!".encode("utf-8")))
         addresses[client] = client_address
         Thread(target=handle_client, args=(client,)).start()
@@ -68,6 +67,7 @@ SERVER.bind(ADDR)
 if __name__ == "__main__":
     SERVER.listen(20)
     print("Waiting for connection...")
+    print(gethostbyname(gethostname()) + ":" + str(PORT))
     ACCEPT_THREAD = Thread(target=accept_incoming_connections)
     ACCEPT_THREAD.start()
     ACCEPT_THREAD.join()
