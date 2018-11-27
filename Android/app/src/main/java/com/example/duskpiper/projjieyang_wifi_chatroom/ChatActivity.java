@@ -61,6 +61,7 @@ public class ChatActivity extends AppCompatActivity implements SocketThread.OnCl
         messages = new ArrayList<String>();
         sendButton.setClickable(false);
         socketThread = new SocketThread(this, host, port);
+        cancelConnectionButton.setVisibility(View.INVISIBLE); // WE ARE NOT YET USING THIS UNSTABLE FEATURE
         updateDebugWindow("> System initialized.");
 
         sendButton.setOnClickListener(new View.OnClickListener() {
