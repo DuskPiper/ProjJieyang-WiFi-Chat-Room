@@ -1,5 +1,6 @@
 package com.example.duskpiper.projjieyang_wifi_chatroom;
 
+import android.app.Activity;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -29,6 +30,8 @@ public class SocketThread extends Thread {
     private DataOutputStream dataOutputStream;
     private String host;
     private int port;
+    private byte[] bytedMsg;
+    private byte[] bytedSendMsg;
 
     public SocketThread(OnClientListener onClientListener, String host, int port) {
         this.onClientListener = onClientListener;
@@ -44,9 +47,7 @@ public class SocketThread extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
-
 
     @Override
     public void run() {
@@ -66,7 +67,7 @@ public class SocketThread extends Thread {
         while (isConnected) {
             try {
                 while (isConnected) {
-                    byte[] bytedMsg = new byte[dataInputStream.available()];
+                    bytedMsg = new byte[dataInputStream.available()];
                     dataInputStream.read(bytedMsg);
                     String receivedMsg = new String(bytedMsg);
                     if (receivedMsg.length() > 1) {
@@ -99,13 +100,12 @@ public class SocketThread extends Thread {
 
     public void sendMessage(String message) {
         try {
-            String encodedMsg = URLEncoder.encode(message, "utf-8");
-            byte[] bytedMsg = encodedMsg.getBytes();
-            dataOutputStream.write(bytedMsg);
+            //String encodedMsg = URLEncoder.encode(message, "utf-8");
+            bytedSendMsg = message.getBytes("UTF-8");
+            dataOutputStream.write(bytedSendMsg);
             Log.d("Socket", "> Message sent");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
 }

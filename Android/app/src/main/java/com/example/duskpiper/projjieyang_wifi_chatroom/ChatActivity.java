@@ -3,7 +3,6 @@ package com.example.duskpiper.projjieyang_wifi_chatroom;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Looper;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,13 +13,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.Socket;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 
 public class ChatActivity extends AppCompatActivity implements SocketThread.OnClientListener {
@@ -29,6 +21,7 @@ public class ChatActivity extends AppCompatActivity implements SocketThread.OnCl
     private EditText inputPort;
     private Button sendButton;
     private Button setAddrButton;
+    private Button cancelConnectionButton;
     private TextView debugWindow;
     private TextView chatWindow;
     private ArrayList<String> debugInfo;
@@ -46,11 +39,9 @@ public class ChatActivity extends AppCompatActivity implements SocketThread.OnCl
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
         // Allow NetWork On Main Thread
-        if (android.os.Build.VERSION.SDK_INT > 9) {
-            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-            StrictMode.setThreadPolicy(policy);
-        }
 
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
 
         inputMessage = (EditText)findViewById(R.id.message_input);
         sendButton = (Button)findViewById(R.id.send_button);
@@ -58,9 +49,10 @@ public class ChatActivity extends AppCompatActivity implements SocketThread.OnCl
         inputIP = (EditText)findViewById(R.id.ip_edit);
         inputPort = (EditText)findViewById(R.id.port_edit);
         setAddrButton = (Button)findViewById(R.id.set_addr_button);
+        cancelConnectionButton = (Button)findViewById(R.id.disconnect_button);
         chatWindow = (TextView)findViewById(R.id.chat_window);
 
-        host = "172.31.140.238";
+        host = "172.31.129.73";
         port = 65525;
         checkWiFiConnection(this);
         output = new StringBuffer();
@@ -84,7 +76,6 @@ public class ChatActivity extends AppCompatActivity implements SocketThread.OnCl
                 } else {
                     inputMessage.setText("");
                     // SEND THROUGH SOCKET
-                    //send(message);
                     socketThread.sendMessage(message);
                 }
             }
@@ -96,13 +87,26 @@ public class ChatActivity extends AppCompatActivity implements SocketThread.OnCl
                 host = inputIP.getText().toString();
                 port = Integer.valueOf(inputPort.getText().toString());
                 updateDebugWindow("> Set new addr = " + host + ":" + Integer.toString(port));
-                if (socketThread.isAlive()) {
+                /*if (socketThread.isAlive()) {
                     socketThread.disconnect();
-                }
+                }*/
                 socketThread.start();
                 updateDebugWindow("> Socket started.");
                 sendButton.setClickable(true);
-                //receive();
+                setAddrButton.setClickable(false);
+            }
+        });
+
+        cancelConnectionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (socketThread != null) {
+                    socketThread.sendMessage("{quit}");
+                    socketThread.disconnect();
+                    socketThread.interrupt();
+                    setAddrButton.setClickable(true);
+                    sendButton.setClickable(false);
+                }
             }
         });
     }
@@ -128,7 +132,7 @@ public class ChatActivity extends AppCompatActivity implements SocketThread.OnCl
         messages.add(newMessage);
         StringBuffer showMessages = new StringBuffer();
         for (String eachMessage : messages) {
-            showMessages.append(eachMessage + "\n");
+            showMessages.append(">" + eachMessage + "\n\n");
         }
         chatWindow.setText(showMessages);
     }
@@ -146,7 +150,6 @@ public class ChatActivity extends AppCompatActivity implements SocketThread.OnCl
             return false;
         }
     }
-
 
     @Override
     public void onNewMessage(String msg) {
@@ -166,107 +169,4 @@ public class ChatActivity extends AppCompatActivity implements SocketThread.OnCl
         super.onDestroy();
         socketThread.disconnect();
     }
-
-    /*public void send(final String message) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Socket socket;
-                try {
-                    // CONNECT
-                    Log.i("socket", "wrapping");
-                    socket = new Socket(host, port);
-
-                    Log.i("socket", "connected");
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            updateDebugWindow("> Sender connection successful.");
-                        }
-                    });
-
-                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                    String utf8Msg = URLEncoder.encode(message, "utf-8");
-                    sendTextMsg(out, utf8Msg);
-                    // out.close();
-                    // socket.close();
-
-                    Log.i("socket", "sent");
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            updateDebugWindow("> Message sent.");
-                            updateChatWindow("Me: " + message);
-                        }
-                    });
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    //updateDebugWindow("> Failed to connect");
-                }
-            }
-        }).start();
-    }
-
-    public void receive(){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Looper.prepare();
-                Socket socket;
-                DataInputStream input;
-                byte[] bytes;
-                try {
-                    socket = new Socket(host, port);
-                    Log.i("socket", "connected");
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            updateDebugWindow("> Receiver connection successful.");
-                        }
-                    });
-                    while (looperDaemon) {
-                        // Log.i("Receiver Loop", "Running");
-
-                        input = new DataInputStream(socket.getInputStream());
-                        //long len = input.readLong();
-                        //int len = input.readUnsignedShort();
-                        int len = input.available();
-                        bytes = new byte[(int)len];
-                        input.read(bytes);
-                        final String receivedMessage = new String(bytes);
-
-                        if (receivedMessage.length() > 1) {
-                            Log.e("MSG", receivedMessage);
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    updateDebugWindow("> Message received.");
-                                    updateChatWindow("Remote: " + receivedMessage);
-                                }
-                            });
-                        } else {
-                            // Log.i("MSG", "Empty msg.");
-                        }
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-    }
-
-    public void sendTextMsg(DataOutputStream out, String msg) throws IOException {
-        // updateDebugWindow("> Sending message...");
-        Log.i("socket", "sending");
-        byte[] bytes = msg.getBytes();
-        long len = bytes.length;
-        out.writeLong(len);
-        out.write(bytes);
-    }*/
 }
