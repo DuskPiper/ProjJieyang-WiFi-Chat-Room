@@ -71,7 +71,7 @@ def color1():
 def message():
     messagebox.showinfo("联系人搜索","这是一个假的功能！！")
 
-d
+
 
 def fontSize(ev=None):
     msglist.config(font='Helvetica -%d bold' % sizeScale.get())
@@ -144,6 +144,7 @@ im = ImageTk.PhotoImage(image)
 imgCanvas.create_image(80,80,image=im)
 '''
 ###
+'''
 imgCanvas1=tkinter.Canvas(frmA3,bg='ivory')
 image1 = Image.open('/Users/yiyuanfu/小黄人.jpg')
 image1 = image1.resize((180, 140))
@@ -151,12 +152,12 @@ im1 = ImageTk.PhotoImage(image1)
 #pdb.set_trace()
 imgCanvas1.create_image(80,80,image=im1)
 
-
+'''
 #Radiobutton
 
 
 #Menubutton
-colorMenubt = tkinter.Menubutton (frmA4, text="color", relief=tkinter.RAISED )
+colorMenubt = tkinter.Menubutton (button_frame, text="color", relief=tkinter.RAISED )
 
 #menu
 
@@ -228,9 +229,9 @@ scroLianxi.grid(row=0, column=1, ipady=120)
 
 listLianxi.grid(row=0, column=0)
 
-imgCanvas1.grid(row=0, column=0, sticky=tkinter.N)
+#imgCanvas1.grid(row=0, column=0, sticky=tkinter.N)
 
-colorMenubt.grid(row=0, column=3)
+colorMenubt.grid(row=0, column=5)
 
 
 
