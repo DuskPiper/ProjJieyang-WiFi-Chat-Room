@@ -7,7 +7,7 @@ def accept_incoming_connections():
     """Sets up handling for incoming clients."""
     while True:
         client, client_address = SERVER.accept()
-        print("> New connection:" + str(client_address))
+        print("> New connection:" + client_address[0] + ':' + str(client_address[1]))
         client.send(bytes("Welcome! Now type your name and press enter!".encode("utf-8")))
         addresses[client] = client_address
         Thread(target=handle_client, args=(client,)).start()
@@ -15,23 +15,32 @@ def accept_incoming_connections():
 
 def handle_client(client):  # Takes client socket as argument.
     """Handles a single client connection."""
-
-    name = client.recv(BUFSIZ).decode("utf-8")
-    welcome = 'Welcome %s ! Type {quit} to exit.' % name
+    try:
+        name = client.recv(BUFSIZ).decode("utf-8")
+        welcome = 'Welcome %s ! Type {quit} to exit.' % name
+    except:
+        pass
     try:
         client.send(bytes(welcome.encode("utf-8")))
-    except TypeError:
+    except:
         pass
     msg = "%s has joined the chat!" % str(name)
     broadcast(bytes(msg.encode("utf-8")))
     clients[client] = name
 
     while True:
-        msg = client.recv(BUFSIZ)
+        try:
+            msg = client.recv(BUFSIZ)
+        except ConnectionResetError:
+            msg = str(clients[client]) + ' has left.'
+            broadcast(bytes(msg.encode("utf-8")))
         if msg != bytes("{quit}", "utf8"):
             if len(msg):
-                print("MSG: " + name + ": " + msg.decode("utf-8"))
-                broadcast(msg, name + ": ")
+                print("> Message: " + name + ": " + msg.decode("utf-8"))
+                try:
+                    broadcast(msg, name + ": ")
+                except:
+                    pass
         else:
             client.send(bytes("{quit}".encode("utf-8")))
             client.close()
@@ -49,7 +58,8 @@ def broadcast(msg, prefix=""):  # prefix is for name identification.
             # sock.send(msg)
             sock.send(bytes(prefix.encode("utf-8")) + msg)
         except error:
-            print("> A socket error occurred")
+            pass
+            # print("> A socket error occurred")
 
 
 
@@ -58,6 +68,7 @@ addresses = {}
 
 HOST = ''
 PORT = 65525
+PORT = int(input('Enter port: '))
 BUFSIZ = 1024
 ADDR = (HOST, PORT)
 
@@ -67,7 +78,7 @@ SERVER.bind(ADDR)
 if __name__ == "__main__":
     SERVER.listen(20)
     print("Waiting for connection...")
-    print(gethostbyname(gethostname()) + ":" + str(PORT))
+    print('Plz connect to ' + gethostbyname(gethostname()) + ":" + str(PORT))
     ACCEPT_THREAD = Thread(target=accept_incoming_connections)
     ACCEPT_THREAD.start()
     ACCEPT_THREAD.join()
