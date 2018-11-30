@@ -53,7 +53,7 @@ public class ChatActivity extends AppCompatActivity implements SocketThread.OnCl
         chatWindow = (TextView)findViewById(R.id.chat_window);
 
         host = "172.31.129.73";
-        port = 65525;
+        port = 999;
         checkWiFiConnection(this);
         output = new StringBuffer();
         inputIP.setText(host);
