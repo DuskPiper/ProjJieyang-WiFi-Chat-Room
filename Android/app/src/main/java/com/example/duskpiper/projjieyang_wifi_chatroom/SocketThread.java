@@ -1,6 +1,7 @@
 package com.example.duskpiper.projjieyang_wifi_chatroom;
 
 import android.app.Activity;
+import android.hardware.camera2.CameraManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -101,6 +102,9 @@ public class SocketThread extends Thread {
     public void sendMessage(String message) {
         try {
             //String encodedMsg = URLEncoder.encode(message, "utf-8");
+            if (message == null) {
+                message = " ";
+            }
             bytedSendMsg = message.getBytes("UTF-8");
             dataOutputStream.write(bytedSendMsg);
             Log.d("Socket", "> Message sent");

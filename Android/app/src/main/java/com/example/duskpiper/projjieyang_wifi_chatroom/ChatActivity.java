@@ -1,9 +1,11 @@
 package com.example.duskpiper.projjieyang_wifi_chatroom;
 
 import android.content.Context;
+import android.hardware.camera2.CameraManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.StrictMode;
+import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -162,12 +164,47 @@ public class ChatActivity extends AppCompatActivity implements SocketThread.OnCl
                 updateChatWindow(newMsg);
             }
         });
-
+        if (checkMsg(msg)) {
+            notifyByVibrator();
+            notifyByFlashlight();
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         socketThread.disconnect();
+    }
+
+    private void notifyByFlashlight() {
+        try {
+            CameraManager cameraManager = (CameraManager)this.getSystemService(Context.CAMERA_SERVICE);
+            cameraManager.setTorchMode("0", true);
+            cameraManager.setTorchMode("0", false);
+            cameraManager.setTorchMode("0", true);
+            cameraManager.setTorchMode("0", false);
+            cameraManager.setTorchMode("0", true);
+            cameraManager.setTorchMode("0", false);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void notifyByVibrator() {
+        Vibrator vibrator = (Vibrator)getSystemService(VIBRATOR_SERVICE);
+        long[] pattern = {300, 100, 200, 500, 300, 100};
+        vibrator.vibrate(pattern, -1);
+    }
+
+    private boolean checkMsg(String msg) {
+        if (msg == null) {
+            return false;
+        } else if (msg.length() < 3) {
+            return false;
+        } else if (msg.charAt(0) == 'W' && msg.charAt(1) == 'e') {
+            return false;
+        } else {
+            return true;
+        }
     }
 }
