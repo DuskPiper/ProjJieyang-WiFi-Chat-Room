@@ -35,6 +35,7 @@ public class ChatActivity extends AppCompatActivity implements SocketThread.OnCl
     private int port;
     private boolean looperDaemon = true;
     private SocketThread socketThread;
+    private String myName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +81,9 @@ public class ChatActivity extends AppCompatActivity implements SocketThread.OnCl
                     inputMessage.setText("");
                     // SEND THROUGH SOCKET
                     socketThread.sendMessage(message);
+                    if (myName == null) {
+                        myName = message;
+                    }
                 }
             }
         });
@@ -197,14 +201,20 @@ public class ChatActivity extends AppCompatActivity implements SocketThread.OnCl
     }
 
     private boolean checkMsg(String msg) {
+        // Check to send notification or not based on msg content
         if (msg == null) {
             return false;
         } else if (msg.length() < 3) {
             return false;
         } else if (msg.charAt(0) == 'W' && msg.charAt(1) == 'e') {
             return false;
+        } else if (myName != null) {
+            if (msg.startsWith(myName)) {
+                return false;
+            }
         } else {
             return true;
         }
+        return true;
     }
 }
